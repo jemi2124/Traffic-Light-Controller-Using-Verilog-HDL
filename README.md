@@ -31,58 +31,39 @@ Capture screenshots of the waveform and save the simulation logs to include in y
 
 Verilog Code for Traffic Light Controller
 
-// traffic_light_controller.v
-module traffic_light_controller (
-    input wire clk,
-    input wire reset,
-    output reg [2:0] lights  // 3-bit output: [2]=Red, [1]=Yellow, [0]=Green
-);
-    // Define states
-    typedef enum reg [1:0] {
-        GREEN = 2'b00,
-        YELLOW = 2'b01,
-        RED = 2'b10
-    } state_t;
-
-    state_t current_state, next_state;
-    reg [3:0] counter;  // Timer counter
-
-    // State transition based on counter
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            current_state <= GREEN;
-            counter <= 0;
-        end else begin
-            if (counter == 4'd9) begin
-                current_state <= next_state;
-                counter <= 0;
-            end else begin
-                counter <= counter + 1;
-            end
-        end
-    end
-
-    // Next state logic and output control
-    always @(*) begin
-        case (current_state)
-            GREEN: begin
-                lights = 3'b001;  // Green light on
-                next_state = YELLOW;
-            end
-            YELLOW: begin
-                lights = 3'b010;  // Yellow light on
-                next_state = RED;
-            end
-            RED: begin
-                lights = 3'b100;  // Red light on
-                next_state = GREEN;
-            end
-            default: begin
-                lights = 3'b000;  // All lights off
-                next_state = GREEN;
-            end
-        endcase
-    end
+module cyclic_traffic(clock,rst,light);
+input clock,rst;
+output reg [2:0]light;
+parameter[1:0] s0=2'b0,
+               s1=2'b01,
+               s2=2'b10;
+parameter [2:0]red=3'b100,
+               yellow=3'b010,
+               green=3'b001;
+reg[1:0] state;
+always@(posedge clock)
+begin
+     if(rst) begin
+     light<=3'b0;
+     state<=2'b00;
+     end
+else
+    case(state)
+    s0:begin //green
+    light<=green;
+    state<=s1;
+end
+   s1:begin //yellow
+   light<=yellow;
+   state<=s2;
+   end
+      s2:begin //red
+      light<=red;
+      state<=s0;
+   end
+default: light<=3'b0;
+endcase
+end
 endmodule
 
 Testbench for Traffic Light Controller
